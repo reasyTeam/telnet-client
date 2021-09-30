@@ -1,0 +1,17 @@
+{
+  "name": "hg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "init": "pip install -r requirements.txt",
+    "serve": "python index.py"
+  },
+  "author": "",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
