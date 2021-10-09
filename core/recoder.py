@@ -48,16 +48,18 @@ class Recoder():
     def recoder(match):
       key = match.group(1)
       if self.langs.__contains__(key):
-        return self.langs[key]
+        return str(self.langs[key])
       else:
         key =key.split('"')
         if len(key) == 5:
           key = key[3]
           if self.langs.__contains__(key):
-            return self.langs[key]
-      return key
+            return str(self.langs[key])
+      return str(key)
 
-    content = re.sub(r'<%\s*multilang\((.*?)\);\s*%>?', recoder, content)
+    # content = re.sub(r'<%\s*multilang\((.*?)\);\s*%>?', recoder, str(content))
+    langre = re.compile(r'<%\s*multilang\((.*?)\);\s*%>?')
+    content = langre.sub(recoder, content)
     # 处理宏相关内容
     content = handle_if(content, file_path)
     out_file_path = os.path.join(out_path, os.path.basename(file_path))
