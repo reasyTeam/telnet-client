@@ -92,8 +92,8 @@ class TelnetClient():
   # 控制台消息打印输出
   def print(self):
     command_result = self.tn.read_very_eager().decode('ascii')
-    if command_result.strip() == '':
-      command_result = '完成'
+    # if command_result.strip() == '':
+    #   command_result = '完成'
     print('[log][命令执行结果]：%s' % command_result)
     print('-------------------------------------------------')
 
