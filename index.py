@@ -47,7 +47,7 @@ if __name__ == "__main__":
   try:
     telnet_client = telnet()  
   except:
-    print('[error]: 网络连接失败，可能是连接已被占用')
+    print('[error]: 网络连接失败，可能是【用户名密码错误】或【连接已被占用】')
     sys.exit() 
   # 开启监控
   def coder(file_path):
