@@ -11,6 +11,13 @@ class TelnetClient():
     self.telnet_ip = ''
     self.username = ''
     self.password = ''
+    # tftp方式 tftp 命令行模式commond 普通模式 normal
+    # narmal 即 tftp -g-r xxx.asp 192.168.1.2(自己的ip地址)
+    # command 即 tftp 192.168.1.2\n 进入tftp命令模式中
+    # get xxx.asp\n (往路由器中传)
+    # put xxx.asp\n (获取到电脑中)
+    # q\n 退出该命令模式
+    self.currentType = 'normal'
 
   # 登录telnet服务器
   def log_in(self, telnet_ip, username, password):
@@ -37,6 +44,8 @@ class TelnetClient():
     command_result = self.tn.read_very_eager().decode('ascii')
     if 'Login incorrect' not in command_result:
       print('[success]: telnet服务器[%s]登录成功！' % telnet_ip)
+      # 确定当前路由器支持的 tftp 方式
+      self.get_current_type()
       return True
     else:
       print('[error]: telnet服务器[%s]登录失败，请确认服务器地址是否正确！' % telnet_ip)
@@ -44,6 +53,16 @@ class TelnetClient():
 
   def reopen(self):
     self.log_in(self.telnet_ip, self.username, self.password)
+
+  # 判断当前方式
+  def get_current_type(self):
+    self.exec_cmd("tftp", 2)
+    self.tn.write("q\n".encode('ascii'))
+    # 能进入 tftp 后输入q 退出没有任何打印 即为commond模式
+    # normal 打印 q not found
+    command_result = self.tn.read_very_eager().decode('ascii')
+    if command_result == "":
+      self.currentType = "commond"
 
   # 执行shell命令
   def exec_cmd(self, command, sleepTime=1):
@@ -56,15 +75,23 @@ class TelnetClient():
   # tftp 拉取文件
   def get(self, file_name):
     self.switch_dir(file_name)
-    command = "tftp -p -r %s %s" % (os.path.basename(file_name), local_ip)
-    self.exec_cmd(command, 2)
+    if(self.currentType == "commond"):
+      self.tftp_get(file_name)
+    else:
+      command = "tftp -p -r %s %s" % (os.path.basename(file_name), local_ip)
+      self.exec_cmd(command, 2)
+    
     self.back_to_root()
 
   # tftp 上传文件
   def put(self, file_name):
     self.switch_dir(file_name)
-    command = "tftp -g -r %s %s" % (os.path.basename(file_name), local_ip)
-    self.exec_cmd(command, 2)
+    if(self.currentType == "commond"):
+      self.tftp_put(file_name)
+    else:
+      command = "tftp -g -r %s %s" % (os.path.basename(file_name), local_ip)
+      self.exec_cmd(command, 2)
+    
     self.back_to_root()
 
   # 根据文件目录进行地址切换
@@ -83,6 +110,27 @@ class TelnetClient():
       return
 
     self.exec_cmd('cd %s && pwd' % base_path)
+
+  # 命令行模式
+  # 进入tftp 命令行
+  def tftp_in(self):
+    self.exec_cmd("tftp %s" % local_ip)
+
+  # 命令行get
+  def tftp_get(self,file_name):
+    self.tftp_in()
+    self.exec_cmd("put %s" % os.path.basename(file_name), 2)
+    self.tftp_out()
+
+ # 命令行put
+  def tftp_put(self,file_name):
+    self.tftp_in()
+    self.exec_cmd("get %s" % os.path.basename(file_name), 2)
+    self.tftp_out()
+
+ # 命令行退出
+  def tftp_out(self):
+    self.exec_cmd("q")
 
   # 断开telnet连接
   def log_out(self):
@@ -110,6 +158,7 @@ if __name__ == "__main__":
     print('##############################\n')
     print(' 注意：如果文件上传/下载失败，请确认本机IP(%s)是否正确 \n' % local_ip)
     print('##############################\n')
+
     # 测试文件下载
     telnet_client.exec_cmd("tftp -p -r wlft.asp %s \n" % local_ip, 2)
     # try:

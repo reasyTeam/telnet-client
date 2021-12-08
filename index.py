@@ -27,6 +27,8 @@ def telnet():
   if telnet_client.log_in(config.telnet_ip, config.username, config.password):
     # 切换到linux shell命令模式
     telnet_client.exec_cmd("sh")
+    # 切换到根目录
+    telnet_client.exec_cmd("cd /")
     # 切换到web目录文件夹
     telnet_client.exec_cmd("cd %s" % config.dir_path)
     print('# 注意：如果文件上传/下载失败或显示tftp: timeout，请确认本机IP[%s]是否正确' % config.local_ip)
